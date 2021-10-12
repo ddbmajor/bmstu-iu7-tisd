@@ -399,10 +399,26 @@ int printdata(student_t data[MAXSTUDENTCOUNT], int count)
 }
 
 
+int addstruct(student_t data[MAXSTUDENTCOUNT], int *count)
+{
+    int rc;
+    student_t tmp;
+    rc = readstruct(&tmp, stdin);
+    if (rc != 0)
+        return rc;
+    else
+    {
+        data[*count] = tmp;
+        *count += 1;
+    }
+    return 0;
+}
+
+
 int mainprocess(char *filename)
 {
     int rc;
-
+    char tmp[MAXNAMELEN];
     student_t data[MAXSTUDENTCOUNT];
     int count = 0;
     
@@ -413,6 +429,7 @@ int mainprocess(char *filename)
     while (rc == 0)
     {
         rc = scanf("%d", &choise);
+        // scanf("%s", tmp);
             if (rc != 1)
                 return CHOISE_ERROR;
         switch (choise)
@@ -432,6 +449,14 @@ int mainprocess(char *filename)
         case 2:
         {
             rc = printdata(data, count);
+            if (rc != 0)
+                return rc;
+            break;
+        }
+        case 3:
+        {
+            fgets(tmp, 3, stdin);
+            rc = addstruct(data, &count);
             if (rc != 0)
                 return rc;
             break;
