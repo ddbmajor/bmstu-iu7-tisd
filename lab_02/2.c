@@ -3,20 +3,24 @@
 #include <math.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <inttypes.h>
+#include <sys/time.h>
+
 
 #define ARG_ERROR 1
 #define OPEN_FILE_ERROR 2
-#define CHOISE_ERROR 3
+#define CHOICE_ERROR 3
 #define EMPTY_FILE_ERROR 4
 #define INPUT_ERROR 5
 #define NOT_FOUND_ERROR 6
+#define OVERFLOW_ERROR 7
 
 #define MAXNAMELEN 30
 #define MAXGROUPLEN 10
 #define MAXDATELEN 10
 #define MAXSTREETLEN 30
 #define MAXBUILDLEN 5
-#define MAXSTUDENTCOUNT 50
+#define MAXSTUDENTCOUNT 1000
 
 typedef enum
 {
@@ -366,11 +370,13 @@ int readstruct(student_t *student, FILE *f, int isadding)
 
 int readfile(student_t data[MAXSTUDENTCOUNT], int *count, char *filename)
 {
+    /*
     if (*count != 0)
     {
         printf("Data already exist!!!\n");
         return 0;
     }
+    */
     int rc;
     student_t temp;
     FILE *f = fopen(filename, "r");
@@ -392,6 +398,16 @@ int readfile(student_t data[MAXSTUDENTCOUNT], int *count, char *filename)
             {
                 data[*count] = temp;
                 *count += 1;
+                if (*count == MAXSTUDENTCOUNT)
+                {
+                    rc = readstruct(&temp, f, 0);
+                    if (rc != 0 && feof(f))
+                        return 0;
+                    else if (rc != 0)
+                        return rc;
+                    else if (rc == 0)
+                        return OVERFLOW_ERROR;
+                }
             }
             else if (rc != 0 && feof(f))
                 return 0;
@@ -488,6 +504,11 @@ int printbykeys(student_t data[MAXSTUDENTCOUNT], key_t keys[MAXSTUDENTCOUNT], in
 
 int addstruct(student_t data[MAXSTUDENTCOUNT], int *count)
 {
+    if (*count == MAXSTUDENTCOUNT)
+    {
+        printf("Array is full!!!\n");
+        return 0;
+    }
     int rc;
     student_t tmp;
     rc = readstruct(&tmp, stdin, 1);
@@ -639,6 +660,92 @@ int keysslowsort(key_t keys[MAXSTUDENTCOUNT], int count)
 }
 
 
+int efficiency(student_t data[MAXSTUDENTCOUNT], key_t keys[MAXSTUDENTCOUNT], int *count, char *filename)
+{
+    int64_t fullquicktime;
+    int64_t fullslowtime;
+    int64_t keysquicktime;
+    int64_t keysslowtime;
+
+    int fullquicksize;
+    int fullslowsize;
+    int keysquicksize;
+    int keysslowsize;
+
+    // quick with data
+	int n = 100;
+	int64_t sum;
+	struct timeval tv_start, tv_stop;
+
+	sum = 0;
+	for (int i = 0; i < n; i++)
+	{
+		readfile(data, count, filename);
+		gettimeofday(&tv_start, NULL);
+		fullquicksort(data, *count);
+		gettimeofday(&tv_stop, NULL);
+		sum += (tv_stop.tv_sec - tv_start.tv_sec) * 1000000LL + (tv_stop.tv_usec - tv_start.tv_usec);
+	}
+	sum /= n;
+	fullquicktime = sum;
+    fullquicksize = sizeof(student_t) * MAXSTUDENTCOUNT;
+
+    // slow with data
+	sum = 0;
+	for (int i = 0; i < n; i++)
+	{
+		readfile(data, count, filename);
+		gettimeofday(&tv_start, NULL);
+		fullslowsort(data, *count);
+		gettimeofday(&tv_stop, NULL);
+		sum += (tv_stop.tv_sec - tv_start.tv_sec) * 1000000LL + (tv_stop.tv_usec - tv_start.tv_usec);
+	}
+	sum /= n;
+	fullslowtime = sum;
+    fullslowsize = sizeof(student_t) * MAXSTUDENTCOUNT;
+
+    // quick with keys
+	sum = 0;
+	for (int i = 0; i < n; i++)
+	{
+		readfile(data, count, filename);
+        makekeys(keys, data, *count);
+		gettimeofday(&tv_start, NULL);
+		keysquicksort(keys, *count);
+		gettimeofday(&tv_stop, NULL);
+		sum += (tv_stop.tv_sec - tv_start.tv_sec) * 1000000LL + (tv_stop.tv_usec - tv_start.tv_usec);
+	}
+	sum /= n;
+	keysquicktime = sum;
+    keysquicksize = sizeof(key_t) * MAXSTUDENTCOUNT;
+
+    // slow with keys
+	sum = 0;
+	for (int i = 0; i < n; i++)
+	{
+		readfile(data, count, filename);
+        makekeys(keys, data, *count);
+		gettimeofday(&tv_start, NULL);
+		fullquicksort(data, *count);
+		gettimeofday(&tv_stop, NULL);
+		sum += (tv_stop.tv_sec - tv_start.tv_sec) * 1000000LL + (tv_stop.tv_usec - tv_start.tv_usec);
+	}
+	sum /= n;
+	keysslowtime = sum;
+    keysslowsize = sizeof(key_t) * MAXSTUDENTCOUNT;
+
+    printf("------------------------------------------\n");
+    printf("|    |fullquick|fullslow|keyquick|keyslow|\n");
+    printf("------------------------------------------\n");
+    printf("|time|%-9" PRId64 "|%-8" PRId64 "|%-8" PRId64 "|%-7" PRId64 "|\n", fullquicktime, fullslowtime, keysquicktime, keysslowtime);
+    printf("------------------------------------------\n");
+    printf("|size|%-9d|%-8d|%-8d|%-7d|\n", fullquicksize, fullslowsize, keysquicksize, keysslowsize);
+    printf("------------------------------------------\n");
+
+    return 0;
+}
+
+
 int mainprocess(char *filename)
 {
     int rc;
@@ -650,17 +757,18 @@ int mainprocess(char *filename)
     char *menu = "Выберите пункт меню:\n0 - Выйти из программы\n1 - Прочитать файл\n2 - Вывести данные\n3 - Вывести таблицу ключей\n"
     "4 - Добавить запись\n5 - Удалить запись\n6 - Отсортировать записи по оценке(быстрая, исходная таблица)\n"
     "7 - Отсортировать записи по оценке(медленная исходная таблица)\n8 - Отсортировать таблицу ключей(быстрая)\n"
-    "9 - Отсортировать таблицу ключей(медленная)\n10 - Вывести данные по таблице ключей\n";
-    printf("%s", menu);
-    int choise;
+    "9 - Отсортировать таблицу ключей(медленная)\n10 - Вывести данные по таблице ключей\n"
+    "11 - Вывод таблицы эффективности\n";
+    int choice;
     
     rc = 0;
     while (rc == 0)
     {
-        rc = scanf("%d", &choise);
+        printf("%s", menu);
+        rc = scanf("%d", &choice);
             if (rc != 1)
-                return CHOISE_ERROR;
-        switch (choise)
+                return CHOICE_ERROR;
+        switch (choice)
         {
         case 0:
         {
@@ -756,11 +864,21 @@ int mainprocess(char *filename)
             printf("Done!\n");
             break;
         }
-        default:
+        case 11:
+        {
+            rc = efficiency(data, keys, &count, filename);
+            if (rc != 0)
+                return rc;
+            printf("Done!\n");
             break;
         }
+        default:
+        {
+            printf("Wrong choice\n");
+            break;
+        }
+        }
     }
-
     return 0;
 }
 
