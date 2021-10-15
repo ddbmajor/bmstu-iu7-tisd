@@ -8,6 +8,7 @@
 #define CHOISE_ERROR 3
 #define EMPTY_FILE_ERROR 4
 #define INPUT_ERROR 5
+#define NOT_FOUND_ERROR 6
 
 #define MAXNAMELEN 30
 #define MAXGROUPLEN 10
@@ -15,7 +16,7 @@
 #define MAXSTREETLEN 30
 #define MAXBUILDLEN 5
 #define MAXSTUDENTCOUNT 50
-#define MENU "Выберите пункт меню:\n0 - Выйти из программы\n1 - Прочитать файл\n2 - Вывести файл\n"
+#define MENU "Выберите пункт меню:\n0 - Выйти из программы\n1 - Прочитать файл\n2 - Вывести файл\n3 - Добавить запись\n4 - Удалить запись\n"
 
 
 typedef enum
@@ -178,13 +179,15 @@ int adressvalidate(char *str)
 }
 
 
-int readstruct(student_t *student, FILE *f)
+int readstruct(student_t *student, FILE *f, int isadding)
 {
     char tempstr[MAXNAMELEN + 2];
     short int num;
     float tempscore;
     student_t tempstudent;
     
+    if (isadding == 1)
+        printf("Insert surname(30 symbols)\n");
     if (fgets(tempstr, MAXNAMELEN + 2, f) && tempstr[strlen(tempstr) - 1] == '\n')
     {
         if (namevalidate(tempstr)) // добавить удаление \n
@@ -195,6 +198,8 @@ int readstruct(student_t *student, FILE *f)
     else
         return INPUT_ERROR;
 
+    if (isadding == 1)
+        printf("Insert name(30 symbols)\n");
     if (fgets(tempstr, MAXNAMELEN + 2, f) && tempstr[strlen(tempstr) -1] == '\n')
     {
         if (namevalidate(tempstr))
@@ -205,6 +210,8 @@ int readstruct(student_t *student, FILE *f)
     else
         return INPUT_ERROR;
 
+    if (isadding == 1)
+        printf("Insert group(10 symbols)\n");
     if (fgets(tempstr, MAXGROUPLEN + 2, f) && tempstr[strlen(tempstr) - 1] == '\n')
     {
         if (groupvalidate(tempstr))
@@ -215,6 +222,8 @@ int readstruct(student_t *student, FILE *f)
     else
         return INPUT_ERROR;
     
+    if (isadding == 1)
+        printf("Insert gender(m - male, f - female)\n");
     if (fgets(tempstr, 3, f) && tempstr[strlen(tempstr) - 1] == '\n')
     {
         if (tempstr[0] == 'm')
@@ -226,7 +235,9 @@ int readstruct(student_t *student, FILE *f)
     }
     else
         return INPUT_ERROR;
-    
+
+    if (isadding == 1)
+        printf("Insert age\n");
     if (fscanf(f ,"%hi", &num) == 1)
     {
         if (num > 0)
@@ -237,6 +248,8 @@ int readstruct(student_t *student, FILE *f)
     else
         return INPUT_ERROR;
 
+    if (isadding == 1)
+        printf("Insert average score(>0.0 and <=5.0)\n");
     if (fscanf(f ,"%f", &tempscore) == 1)
     {
         if ((tempscore > 0.0 && tempscore < 5.0) || fabs(tempscore - 5.0) < 1e-8)
@@ -249,6 +262,8 @@ int readstruct(student_t *student, FILE *f)
     
     fgets(tempstr, 2, f);
     
+    if (isadding == 1)
+        printf("Insert date(dd.mm.yyyy)\n");
     if (fgets(tempstr, MAXDATELEN + 2, f) && tempstr[strlen(tempstr) - 1] == '\n')
     {
         if (datevalidate(tempstr))
@@ -259,11 +274,13 @@ int readstruct(student_t *student, FILE *f)
     else
         return INPUT_ERROR;
     
+    if (isadding == 1)
+        printf("Insert type of living(home or coliving)\n");
     if (fgets(tempstr, 20, f) && tempstr[strlen(tempstr) - 1] == '\n')
     {
-        if (strcmp(tempstr, "дом\n") == 0)
+        if (strcmp(tempstr, "home\n") == 0)
             tempstudent.kind = rich;
-        else if (strcmp(tempstr, "общежитие\n") == 0)
+        else if (strcmp(tempstr, "coliving\n") == 0)
             tempstudent.kind = poor;
         else
             return INPUT_ERROR;
@@ -273,6 +290,8 @@ int readstruct(student_t *student, FILE *f)
     
     if (tempstudent.kind == rich)
     {
+        if (isadding == 1)
+            printf("Insert street(30 symbols)\n");
         if (fgets(tempstr, MAXSTREETLEN + 2, f) && tempstr[strlen(tempstr) - 1] == '\n')
         {
             if (adressvalidate(tempstr))
@@ -282,7 +301,9 @@ int readstruct(student_t *student, FILE *f)
         }
         else
             return INPUT_ERROR;
-        
+
+        if (isadding == 1)
+            printf("Insert buiding(5 symbols)\n");
         if (fgets(tempstr, MAXBUILDLEN + 2, f) && tempstr[strlen(tempstr) - 1] == '\n')
         {
             if (adressvalidate(tempstr))
@@ -293,6 +314,8 @@ int readstruct(student_t *student, FILE *f)
         else
             return INPUT_ERROR;
         
+        if (isadding == 1)
+            printf("Insert № of apartment\n");
         if (fscanf(f ,"%hi", &num) == 1)
         {
             if (num > 0)
@@ -305,6 +328,8 @@ int readstruct(student_t *student, FILE *f)
     }
     else if (tempstudent.kind == poor)
     {
+        if (isadding == 1)
+            printf("Insert № of coliving\n");
         if (fscanf(f ,"%hi", &num) == 1)
         {
             if (num > 0)
@@ -315,6 +340,8 @@ int readstruct(student_t *student, FILE *f)
         else
             return INPUT_ERROR;
 
+        if (isadding == 1)
+            printf("Insert № of room\n");
         if (fscanf(f ,"%hi", &num) == 1)
         {
             if (num > 0)
@@ -340,7 +367,7 @@ int readfile(student_t data[MAXSTUDENTCOUNT], int *count, char *filename)
         return OPEN_FILE_ERROR;
     else
     {   
-        rc = readstruct(&temp, f);
+        rc = readstruct(&temp, f, 0);
         if (rc != 0 && feof(f))
             return EMPTY_FILE_ERROR;
         else if (rc != 0)
@@ -349,7 +376,7 @@ int readfile(student_t data[MAXSTUDENTCOUNT], int *count, char *filename)
         *count += 1;
         while (rc == 0)
         {
-            rc = readstruct(&temp, f);
+            rc = readstruct(&temp, f, 0);
             if (rc == 0)
             {
                 data[*count] = temp;
@@ -393,8 +420,13 @@ void printstruct(student_t student)
 
 int printdata(student_t data[MAXSTUDENTCOUNT], int count)
 {
+    printf("\n");
     for (int i = 0; i < count; i++)
+    {
+        printf("%d student\n", i + 1);
         printstruct(data[i]);
+        printf("\n");
+    }
     return 0;
 }
 
@@ -403,7 +435,7 @@ int addstruct(student_t data[MAXSTUDENTCOUNT], int *count)
 {
     int rc;
     student_t tmp;
-    rc = readstruct(&tmp, stdin);
+    rc = readstruct(&tmp, stdin, 1);
     if (rc != 0)
         return rc;
     else
@@ -412,6 +444,26 @@ int addstruct(student_t data[MAXSTUDENTCOUNT], int *count)
         *count += 1;
     }
     return 0;
+}
+
+
+int delstruct(student_t data[MAXSTUDENTCOUNT], int *count, char *key)
+{
+    short int flag = 0;
+    for (int i = 0; i < *count; i++)
+    {
+        if (strcmp(data[i].surname, key) == 0)
+        {
+            for (int j = i; j < *count - 1; j++)
+                data[j] = data[j + 1];
+            *count -= 1;
+            flag = 1;
+        }
+    }
+    if (flag)
+        return 0;
+    else
+        return NOT_FOUND_ERROR;
 }
 
 
@@ -429,7 +481,6 @@ int mainprocess(char *filename)
     while (rc == 0)
     {
         rc = scanf("%d", &choise);
-        // scanf("%s", tmp);
             if (rc != 1)
                 return CHOISE_ERROR;
         switch (choise)
@@ -444,6 +495,7 @@ int mainprocess(char *filename)
             rc = readfile(data, &count, filename);
             if (rc != 0)
                 return rc;
+            printf("Done!\n");
             break;
         }
         case 2:
@@ -451,6 +503,7 @@ int mainprocess(char *filename)
             rc = printdata(data, count);
             if (rc != 0)
                 return rc;
+            printf("Done!\n");
             break;
         }
         case 3:
@@ -459,6 +512,19 @@ int mainprocess(char *filename)
             rc = addstruct(data, &count);
             if (rc != 0)
                 return rc;
+            printf("Done!\n");
+            break;
+        }
+        case 4:
+        {
+            printf("\nInput surname\n");
+            fgets(tmp, 3, stdin);
+            fgets(tmp, MAXNAMELEN, stdin);
+            tmp[strlen(tmp) - 1] = '\0';
+            rc = delstruct(data, &count, tmp);
+            if (rc != 0)
+                return rc;
+            printf("Done!\n");
             break;
         }
         default:
