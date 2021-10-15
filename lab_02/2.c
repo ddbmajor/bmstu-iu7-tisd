@@ -2,6 +2,7 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 #define ARG_ERROR 1
 #define OPEN_FILE_ERROR 2
@@ -16,8 +17,6 @@
 #define MAXSTREETLEN 30
 #define MAXBUILDLEN 5
 #define MAXSTUDENTCOUNT 50
-#define MENU "Выберите пункт меню:\n0 - Выйти из программы\n1 - Прочитать файл\n2 - Вывести файл\n3 - Добавить запись\n4 - Удалить запись\n"
-
 
 typedef enum
 {
@@ -63,6 +62,13 @@ typedef struct
     live_kind_t kind;
     adress_t adress;
 } student_t;
+
+typedef struct 
+{
+    unsigned int position;
+    float score;
+}key_t;
+
 
 
 int namevalidate(char *str)
@@ -360,6 +366,11 @@ int readstruct(student_t *student, FILE *f, int isadding)
 
 int readfile(student_t data[MAXSTUDENTCOUNT], int *count, char *filename)
 {
+    if (*count != 0)
+    {
+        printf("Data already exist!!!\n");
+        return 0;
+    }
     int rc;
     student_t temp;
     FILE *f = fopen(filename, "r");
@@ -387,6 +398,19 @@ int readfile(student_t data[MAXSTUDENTCOUNT], int *count, char *filename)
             else
                 return rc;
         }
+    }
+    return 0;
+}
+
+
+int makekeys(key_t keys[MAXSTUDENTCOUNT], student_t data[MAXSTUDENTCOUNT], int count)
+{
+    if (count == 0)
+        return EMPTY_FILE_ERROR;
+    for (int i = 0; i < count; i++)
+    {
+        keys[i].position = i;
+        keys[i].score = data[i].score;
     }
     return 0;
 }
@@ -420,11 +444,42 @@ void printstruct(student_t student)
 
 int printdata(student_t data[MAXSTUDENTCOUNT], int count)
 {
+    if (count == 0)
+        return EMPTY_FILE_ERROR;
     printf("\n");
     for (int i = 0; i < count; i++)
     {
-        printf("%d student\n", i + 1);
+        printf("%d student:\n", i + 1);
         printstruct(data[i]);
+        printf("\n");
+    }
+    return 0;
+}
+
+
+int printkeys(key_t keys[MAXSTUDENTCOUNT], int count)
+{
+    if (count == 0)
+        return EMPTY_FILE_ERROR;
+    printf("\n");
+    for (int i = 0; i < count; i++)
+    {
+        printf("%d student:\n", i);
+        printf("pos: %d\tscore: %f", keys[i].position, keys[i].score);
+        printf("\n");
+    }
+    return 0;
+}
+
+
+int printbykeys(student_t data[MAXSTUDENTCOUNT], key_t keys[MAXSTUDENTCOUNT], int count)
+{
+    if (count == 0)
+        return EMPTY_FILE_ERROR;
+    for (int i = 0; i < count; i++)
+    {
+        printf("%d student:\n", i + 1);
+        printstruct(data[keys[i].position]);
         printf("\n");
     }
     return 0;
@@ -443,6 +498,16 @@ int addstruct(student_t data[MAXSTUDENTCOUNT], int *count)
         data[*count] = tmp;
         *count += 1;
     }
+    return 0;
+}
+
+
+int addkey(key_t keys[MAXSTUDENTCOUNT], int count, student_t student)
+{
+    if (count == 0)
+        return EMPTY_FILE_ERROR;
+    keys[count - 1].position = count - 1;
+    keys[count - 1].score = student.score;
     return 0;
 }
 
@@ -467,14 +532,126 @@ int delstruct(student_t data[MAXSTUDENTCOUNT], int *count, char *key)
 }
 
 
+int compare_student(const void *first, const void *second)
+{
+    const student_t *a = first;
+    const student_t *b = second;
+    if (fabs(a->score - b->score) < 1e-8)
+        return 0;
+    if (a->score < b->score)
+        return -1;
+    if (a->score > b->score)
+        return 1;
+    return 0;
+}
+
+
+int fullquicksort(student_t data[MAXSTUDENTCOUNT], int count)
+{
+    if (count == 0)
+        return EMPTY_FILE_ERROR;
+    if (count == 1)
+        return 0;
+    qsort(data, count, sizeof(student_t), compare_student);
+    return 0;
+}
+
+
+void push(void *first, void *second, size_t size)
+{
+    for (size_t i = 0; i < size; ++i)
+        *((char *) first + i) = *((char *) second + i);
+}
+
+
+void mysort(void *base, int num, size_t size, int (*compare)(const void *, const void *))
+{
+    if (num == 1)
+        return;
+    char *start = (char *)base;
+    char *key = malloc(size);
+    if (key == NULL)
+    {
+        free(key);
+        return;
+    }
+
+    int j;
+    for (int i = 1; i < num; i++)
+    {
+        push(key, start + i * size, size);
+        j = i - 1;
+        while (j >= 0 && compare(key, start + j * size) < 0)
+        {
+            push(start + (j + 1) * size, start + j * size, size);
+            j--;
+        }
+        push(start + (j + 1) * size, key, size);
+    }
+    free(key);
+}
+
+
+int fullslowsort(student_t data[MAXSTUDENTCOUNT], int count)
+{
+    if (count == 0)
+        return EMPTY_FILE_ERROR;
+    if (count == 1)
+        return 0;
+    mysort(data, count, sizeof(student_t), compare_student);
+    return 0;
+}
+
+
+int compare_key(const void *first, const void *second)
+{
+    const key_t *a = first;
+    const key_t *b = second;
+    if (fabs(a->score - b->score) < 1e-8)
+        return 0;
+    if (a->score < b->score)
+        return -1;
+    if (a->score > b->score)
+        return 1;
+    return 0;
+}
+
+
+int keysquicksort(key_t keys[MAXSTUDENTCOUNT], int count)
+{
+    if (count == 0)
+        return EMPTY_FILE_ERROR;
+    if (count == 1)
+        return 0;
+    qsort(keys, count, sizeof(key_t), compare_key);
+    return 0;
+}
+
+
+int keysslowsort(key_t keys[MAXSTUDENTCOUNT], int count)
+{
+    if (count == 0)
+        return EMPTY_FILE_ERROR;
+    if (count == 1)
+        return 0;
+    mysort(keys, count, sizeof(key_t), compare_key);
+    return 0;
+}
+
+
 int mainprocess(char *filename)
 {
     int rc;
     char tmp[MAXNAMELEN];
     student_t data[MAXSTUDENTCOUNT];
-    int count = 0;
+    key_t keys[MAXSTUDENTCOUNT];
     
-    printf(MENU);
+    int count = 0;
+    char *menu = "Выберите пункт меню:\n0 - Выйти из программы\n1 - Прочитать файл\n2 - Вывести данные\n3 - Вывести таблицу ключей\n"
+    "4 - Добавить запись\n5 - Удалить запись\n6 - Отсортировать записи по оценке(быстрая, исходная таблица)\n"
+    "7 - Отсортировать записи по оценке(медленная исходная таблица)\n8 - Отсортировать таблицу ключей(быстрая)\n"
+    "9 - Отсортировать таблицу ключей(медленная)\n10 - Вывести данные по таблице ключей\n";
+    printf("%s", menu);
     int choise;
     
     rc = 0;
@@ -495,6 +672,7 @@ int mainprocess(char *filename)
             rc = readfile(data, &count, filename);
             if (rc != 0)
                 return rc;
+            rc = makekeys(keys, data, count);
             printf("Done!\n");
             break;
         }
@@ -508,8 +686,7 @@ int mainprocess(char *filename)
         }
         case 3:
         {
-            fgets(tmp, 3, stdin);
-            rc = addstruct(data, &count);
+            rc = printkeys(keys, count);
             if (rc != 0)
                 return rc;
             printf("Done!\n");
@@ -517,11 +694,63 @@ int mainprocess(char *filename)
         }
         case 4:
         {
+            fgets(tmp, 3, stdin);
+            rc = addstruct(data, &count);
+            if (rc != 0)
+                return rc;
+            addkey(keys, count, data[count - 1]);
+            printf("Done!\n");
+            break;
+        }
+        case 5:
+        {
             printf("\nInput surname\n");
             fgets(tmp, 3, stdin);
             fgets(tmp, MAXNAMELEN, stdin);
             tmp[strlen(tmp) - 1] = '\0';
             rc = delstruct(data, &count, tmp);
+            if (rc != 0)
+                return rc;
+            makekeys(keys, data, count);
+            printf("Done!\n");
+            break;
+        }
+        case 6:
+        {
+            rc = fullquicksort(data, count);
+            if (rc != 0)
+                return rc;
+            printf("Done!\n");
+            break;
+        }
+        case 7:
+        {
+            rc = fullslowsort(data, count);
+            if (rc != 0)
+                return rc;
+            printf("Done!\n");
+            break;
+
+        }
+        case 8:
+        {
+            rc = keysquicksort(keys, count);
+            if (rc != 0)
+                return rc;
+            printf("Done!\n");
+            break;
+        }
+        case 9:
+        {
+            rc = keysslowsort(keys, count);
+            if (rc != 0)
+                return rc;
+            printf("Done!\n");
+            break;
+        }
+        case 10:
+        {
+            rc = printbykeys(data, keys, count);
             if (rc != 0)
                 return rc;
             printf("Done!\n");
