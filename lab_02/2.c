@@ -22,6 +22,7 @@
 #define MAXBUILDLEN 5
 #define MAXSTUDENTCOUNT 1000
 
+
 typedef enum
 {
     male = 0,
@@ -72,7 +73,6 @@ typedef struct
     unsigned int position;
     float score;
 }key_t;
-
 
 
 int namevalidate(char *str)
@@ -660,8 +660,16 @@ int keysslowsort(key_t keys[MAXSTUDENTCOUNT], int count)
 }
 
 
-int efficiency(student_t data[MAXSTUDENTCOUNT], key_t keys[MAXSTUDENTCOUNT], int *count, char *filename)
+int efficiency(char *filename)
 {
+    student_t data[MAXSTUDENTCOUNT];
+    key_t keys[MAXSTUDENTCOUNT];
+    int count;
+    readfile(data, &count, filename);
+    makekeys(keys, data, count);
+    student_t arr[count];
+    key_t keyarr[count];
+
     int64_t fullquicktime;
     int64_t fullslowtime;
     int64_t keysquicktime;
@@ -680,59 +688,57 @@ int efficiency(student_t data[MAXSTUDENTCOUNT], key_t keys[MAXSTUDENTCOUNT], int
 	sum = 0;
 	for (int i = 0; i < n; i++)
 	{
-		readfile(data, count, filename);
+		memmove(arr, data, sizeof(student_t) * count);
 		gettimeofday(&tv_start, NULL);
-		fullquicksort(data, *count);
+		fullquicksort(arr, count);
 		gettimeofday(&tv_stop, NULL);
 		sum += (tv_stop.tv_sec - tv_start.tv_sec) * 1000000LL + (tv_stop.tv_usec - tv_start.tv_usec);
 	}
 	sum /= n;
 	fullquicktime = sum;
-    fullquicksize = sizeof(student_t) * MAXSTUDENTCOUNT;
+    fullquicksize = sizeof(student_t) * count;
 
     // slow with data
 	sum = 0;
 	for (int i = 0; i < n; i++)
 	{
-		readfile(data, count, filename);
+		memmove(arr, data, sizeof(student_t) * count);
 		gettimeofday(&tv_start, NULL);
-		fullslowsort(data, *count);
+		fullslowsort(arr, count);
 		gettimeofday(&tv_stop, NULL);
 		sum += (tv_stop.tv_sec - tv_start.tv_sec) * 1000000LL + (tv_stop.tv_usec - tv_start.tv_usec);
 	}
 	sum /= n;
 	fullslowtime = sum;
-    fullslowsize = sizeof(student_t) * MAXSTUDENTCOUNT;
+    fullslowsize = sizeof(student_t) * count;
 
     // quick with keys
 	sum = 0;
 	for (int i = 0; i < n; i++)
 	{
-		readfile(data, count, filename);
-        makekeys(keys, data, *count);
+		memmove(keyarr, keys, sizeof(key_t) * count);
 		gettimeofday(&tv_start, NULL);
-		keysquicksort(keys, *count);
+		keysquicksort(keyarr, count);
 		gettimeofday(&tv_stop, NULL);
 		sum += (tv_stop.tv_sec - tv_start.tv_sec) * 1000000LL + (tv_stop.tv_usec - tv_start.tv_usec);
 	}
 	sum /= n;
 	keysquicktime = sum;
-    keysquicksize = sizeof(key_t) * MAXSTUDENTCOUNT;
+    keysquicksize = sizeof(key_t) * count;
 
     // slow with keys
 	sum = 0;
 	for (int i = 0; i < n; i++)
 	{
-		readfile(data, count, filename);
-        makekeys(keys, data, *count);
+		memmove(keyarr, keys, sizeof(key_t) * count);
 		gettimeofday(&tv_start, NULL);
-		fullquicksort(data, *count);
+		keysslowsort(keyarr, count);
 		gettimeofday(&tv_stop, NULL);
 		sum += (tv_stop.tv_sec - tv_start.tv_sec) * 1000000LL + (tv_stop.tv_usec - tv_start.tv_usec);
 	}
 	sum /= n;
 	keysslowtime = sum;
-    keysslowsize = sizeof(key_t) * MAXSTUDENTCOUNT;
+    keysslowsize = sizeof(key_t) * count;
 
     printf("------------------------------------------\n");
     printf("|    |fullquick|fullslow|keyquick|keyslow|\n");
@@ -866,7 +872,7 @@ int mainprocess(char *filename)
         }
         case 11:
         {
-            rc = efficiency(data, keys, &count, filename);
+            rc = efficiency(filename);
             if (rc != 0)
                 return rc;
             printf("Done!\n");
@@ -881,6 +887,7 @@ int mainprocess(char *filename)
     }
     return 0;
 }
+
 
 int main(int argc, char **argv)
 {
