@@ -502,6 +502,37 @@ int printbykeys(student_t data[MAXSTUDENTCOUNT], key_t keys[MAXSTUDENTCOUNT], in
 }
 
 
+int printbyyear(student_t data[MAXSTUDENTCOUNT], int count, int thatyear)
+{
+    int flag = 0;
+    if (count == 0)
+        return EMPTY_FILE_ERROR;
+    int day, month, year;
+    char tmpstr[MAXDATELEN];
+
+    for (int i = 0; i < count; i++)
+        if (data[i].kind == poor)
+        {
+            strcpy(tmpstr, data[i].date);
+            sscanf(data[i].date, "%d.%d.%d", &day, &month, &year);
+            if (year == thatyear)
+            {
+                printf("%d student:\n", flag + 1);
+                printstruct(data[i]);
+                printf("\n");
+                flag += 1;
+            }
+        }
+    if (flag)
+        return 0;
+    else
+    {
+        printf("No data\n");
+        return 0;
+    }
+}
+
+
 int addstruct(student_t data[MAXSTUDENTCOUNT], int *count)
 {
     if (*count == MAXSTUDENTCOUNT)
@@ -756,6 +787,7 @@ int mainprocess(char *filename)
 {
     int rc;
     char tmp[MAXNAMELEN];
+    int tmpyear;
     student_t data[MAXSTUDENTCOUNT];
     key_t keys[MAXSTUDENTCOUNT];
     
@@ -764,7 +796,7 @@ int mainprocess(char *filename)
     "4 - Добавить запись\n5 - Удалить запись\n6 - Отсортировать записи по оценке(быстрая, исходная таблица)\n"
     "7 - Отсортировать записи по оценке(медленная исходная таблица)\n8 - Отсортировать таблицу ключей(быстрая)\n"
     "9 - Отсортировать таблицу ключей(медленная)\n10 - Вывести данные по таблице ключей\n"
-    "11 - Вывод таблицы эффективности\n";
+    "11 - Вывод таблицы эффективности\n12 - Вывести список студентов, указанного года поступления, живущих в общежитии.\n";
     int choice;
     
     rc = 0;
@@ -873,6 +905,19 @@ int mainprocess(char *filename)
         case 11:
         {
             rc = efficiency(filename);
+            if (rc != 0)
+                return rc;
+            printf("Done!\n");
+            break;
+        }
+        case 12:
+        {
+            printf("\nInput year\n");
+            scanf("%d", &tmpyear);
+            if (tmpyear < 0)
+                return INPUT_ERROR;
+            fgets(tmp, 3, stdin);
+            rc = printbyyear(data, count, tmpyear);
             if (rc != 0)
                 return rc;
             printf("Done!\n");
