@@ -54,7 +54,6 @@ typedef union
     coliving_t coliving;
 }adress_t;
 
-
 typedef struct
 {
     char surname[MAXNAMELEN];
@@ -386,9 +385,15 @@ int readfile(student_t data[MAXSTUDENTCOUNT], int *count, char *filename)
     {   
         rc = readstruct(&temp, f, 0);
         if (rc != 0 && feof(f))
+        {
+            fclose(f);
             return EMPTY_FILE_ERROR;
+        }
         else if (rc != 0)
+        {
+            fclose(f);
             return rc;
+        }
         data[*count] = temp;
         *count += 1;
         while (rc == 0)
@@ -402,19 +407,35 @@ int readfile(student_t data[MAXSTUDENTCOUNT], int *count, char *filename)
                 {
                     rc = readstruct(&temp, f, 0);
                     if (rc != 0 && feof(f))
+                    {
+                        fclose(f);
                         return 0;
+                    }
                     else if (rc != 0)
+                    {
+                        fclose(f);
                         return rc;
+                    }
                     else if (rc == 0)
+                    {
+                        fclose(f);
                         return OVERFLOW_ERROR;
+                    }
                 }
             }
             else if (rc != 0 && feof(f))
+            {
+                fclose(f);
                 return 0;
+            }
             else
+            {
+                fclose(f);
                 return rc;
+            }
         }
     }
+    fclose(f);
     return 0;
 }
 
