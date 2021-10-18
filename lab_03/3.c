@@ -11,6 +11,7 @@
 #define OPEN_FILE_ERROR 5
 #define ZERO_MATRIX_ERROR 6
 #define DIMENSION_ERROR 7
+#define CHOICE_ERROR 8
 
 typedef struct
 {
@@ -439,80 +440,212 @@ int mult(matrix_t *res, matrix_t *m, matrix_t *v)
 
 int main(int argc, char**argv)
 {
-    /*
     int rc;
-    simple_matrix_t *simple_matrix;
-    matrix_t *matrix;
-    FILE *f = stdin;
+    FILE *f;
     if (argc == 2)
     {
         f = fopen(argv[1], "r");
         if (f == NULL)
             return OPEN_FILE_ERROR;
     }
-    simple_matrix = init_matrix();
-    rc = read_matrix(simple_matrix, f);
-    if (rc != 0)
-    {
-        free(simple_matrix);
-        if (argc == 2)
-            fclose(f);
-        return rc;
-    }
-    print_matrix(simple_matrix);
 
-    matrix = init_spare_matrix();
-    transform(matrix, simple_matrix);
-    print_sep_matrix(matrix);*/
+    int choice;
+    rc = scanf("%d", &choice);
+    if (rc != 1)
+        return CHOICE_ERROR;
 
-    /*simple_matrix = init_matrix();
-    rc = make_random_matrix(simple_matrix, 30, 3, 3);
-    if (rc != 0)
-        return rc;
-    
-    print_matrix(simple_matrix);
-    matrix = init_spare_matrix();
-    transform(matrix, simple_matrix);
-    print_sep_matrix(matrix);*/
-
-    FILE *f = fopen(argv[1], "r");
-    if (f == NULL)
-        return OPEN_FILE_ERROR;
-
-    int rc;
-    simple_matrix_t *m;
-    simple_matrix_t *vec;
+    simple_matrix_t *simple_matrix;
+    simple_matrix_t *simple_vec;
     simple_matrix_t *res;
-    matrix_t *m1;
-    matrix_t *vec1;
-    matrix_t *res1;
-
-    m = init_matrix();
-    vec = init_matrix();
-    res = init_matrix();
-    m1 = init_spare_matrix();
-    vec1 = init_spare_matrix();
-    res1 = init_spare_matrix();
-
-    rc = read_matrix(m, f);
-    if (rc != 0)
-        return rc;
-    transform(m1, m);
-
-    rc = read_matrix(vec, f);
-    if (rc != 0)
-        return rc;
-    transform(vec1, vec);
-    
-    res = simple_mult(m, vec);
-    if (res == NULL)
-        return -2;
-    print_matrix(res);
-
-    rc = mult(res1, m1, vec1);
-    if (rc != 0)
-        return rc;
-    print_sep_matrix(res1);
+    matrix_t *matrix;
+    matrix_t *vec;
+    matrix_t *result;
+    switch (choice)
+    {
+        case 1:
+        {
+            printf("Введите матрицу 1(координаты, значение)\n");
+            simple_matrix = init_matrix();
+            rc = read_matrix(simple_matrix, stdin);
+            if (rc != 0)
+                return rc;
+            if (simple_matrix->rows <= 12 && simple_matrix->columns <= 12)
+            {
+                printf("Матрица 1\n");
+                print_matrix(simple_matrix);
+            }
+            simple_vec = init_matrix();
+            printf("Введите матрицу 2(координаты, значение)\n");
+            rc = read_matrix(simple_vec, stdin);
+            if (rc != 0)
+                return rc;
+            if (simple_vec->rows <= 12 && simple_vec->columns <= 12)
+            {
+                printf("Матрица 2\n");
+                print_matrix(simple_vec);
+            }
+            res = init_matrix();
+            res = simple_mult(simple_matrix, simple_vec);
+            if (res == NULL)
+                return MEMORY_ERROR;
+            if (res->rows <= 12 && res->columns <= 12)
+            {
+                printf("Результат\n");
+                print_matrix(res);
+            }
+            matrix = init_spare_matrix();
+            rc = transform(matrix, simple_matrix);
+            if (rc != 0)
+            {
+                if (rc == ZERO_MATRIX_ERROR)
+                    printf("Результат - вектор из нулей");
+                return rc;
+            }
+            vec = init_spare_matrix();
+            rc = transform(vec, simple_vec);
+            if (rc != 0)
+            {
+                if (rc == ZERO_MATRIX_ERROR)
+                    printf("Результат - вектор из нулей");
+                return rc;
+            }
+            result = init_spare_matrix();
+            rc = mult(result, matrix, vec);
+            if (rc != 0)
+            {
+                if (rc == ZERO_MATRIX_ERROR)
+                    printf("Результат - вектор из нулей");
+                return rc;
+            }
+            print_sep_matrix(result);
+            break;
+        }
+        case 2:
+        {
+            // printf("Введите матрицу 1(координаты, значение)\n");
+            simple_matrix = init_matrix();
+            rc = read_matrix(simple_matrix, f);
+            if (rc != 0)
+                return rc;
+            if (simple_matrix->rows <= 12 && simple_matrix->columns <= 12)
+            {
+                printf("Матрица 1\n");
+                print_matrix(simple_matrix);
+            }
+            simple_vec = init_matrix();
+            // printf("Введите матрицу 2(координаты, значение)\n");
+            rc = read_matrix(simple_vec, f);
+            if (rc != 0)
+                return rc;
+            if (simple_vec->rows <= 12 && simple_vec->columns <= 12)
+            {
+                printf("Матрица 2\n");
+                print_matrix(simple_vec);
+            }
+            res = init_matrix();
+            res = simple_mult(simple_matrix, simple_vec);
+            if (res == NULL)
+                return MEMORY_ERROR;
+            if (res->rows <= 12 && res->columns <= 12)
+            {
+                printf("Результат\n");
+                print_matrix(res);
+            }
+            matrix = init_spare_matrix();
+            rc = transform(matrix, simple_matrix);
+            if (rc != 0)
+            {
+                if (rc == ZERO_MATRIX_ERROR)
+                    printf("Результат - вектор из нулей");
+                return rc;
+            }
+            vec = init_spare_matrix();
+            rc = transform(vec, simple_vec);
+            if (rc != 0)
+            {
+                if (rc == ZERO_MATRIX_ERROR)
+                    printf("Результат - вектор из нулей");
+                return rc;
+            }
+            result = init_spare_matrix();
+            rc = mult(result, matrix, vec);
+            if (rc != 0)
+            {
+                if (rc == ZERO_MATRIX_ERROR)
+                    printf("Результат - вектор из нулей");
+                return rc;
+            }
+            print_sep_matrix(result);
+            break;
+        }
+        case 3:
+        {
+            printf("Введите процент, количество строк и столбцов\n");
+            int rows, columns, proc;
+            rc = scanf("%d %d %d", &proc, &rows, &columns);
+            if (rc != 3)
+                return CHOICE_ERROR;
+            simple_matrix = init_matrix();
+            rc = make_random_matrix(simple_matrix, proc, rows, columns);
+            if (rc != 0)
+                return rc;
+            if (simple_matrix->rows <= 12 && simple_matrix->columns <= 12)
+            {
+                printf("Матрица 1\n");
+                print_matrix(simple_matrix);
+            }
+            simple_vec = init_matrix();
+            printf("Введите процент, количество строк и столбцов\n");
+            rc = scanf("%d %d %d", &proc, &rows, &columns);
+            if (rc != 3)
+                return CHOICE_ERROR;
+            rc = make_random_matrix(simple_vec, proc, rows, columns);
+            if (rc != 0)
+                return rc;
+            if (simple_vec->rows <= 12 && simple_vec->columns <= 12)
+            {
+                printf("Матрица 2\n");
+                print_matrix(simple_vec);
+            }
+            res = init_matrix();
+            res = simple_mult(simple_matrix, simple_vec);
+            if (res == NULL)
+                return MEMORY_ERROR;
+            if (res->rows <= 12 && res->columns <= 12)
+            {
+                printf("Результат\n");
+                print_matrix(res);
+            }
+            matrix = init_spare_matrix();
+            rc = transform(matrix, simple_matrix);
+            if (rc != 0)
+            {
+                if (rc == ZERO_MATRIX_ERROR)
+                    printf("Результат - вектор из нулей");
+                return rc;
+            }
+            vec = init_spare_matrix();
+            rc = transform(vec, simple_vec);
+            if (rc != 0)
+            {
+                if (rc == ZERO_MATRIX_ERROR)
+                    printf("Результат - вектор из нулей");
+                return rc;
+            }
+            result = init_spare_matrix();
+            rc = mult(result, matrix, vec);
+            if (rc != 0)
+            {
+                if (rc == ZERO_MATRIX_ERROR)
+                    printf("Результат - вектор из нулей");
+                return rc;
+            }
+            print_sep_matrix(result);
+            break;
+        }
+        default:
+            break;
+    }
 
     return 0;
 }
