@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <ctype.h>
+#include <inttypes.h>
+#include <sys/time.h>
 
 #define DIM_INPUT_ERROR 1
 #define MEMORY_ERROR 2
@@ -35,6 +38,7 @@ typedef struct
     JA_t *JA_head;
     int rows;
     int columns;
+    int elements;
 } matrix_t;
 
 
@@ -60,12 +64,13 @@ void JA_free(JA_t *JA_element)
 
 void JA_free_all(JA_t *head)
 {
-    JA_t *next;
+    JA_t *curr = head;
 
-    for ( ; head; head = next)
+    while (curr)
     {
-        next = head->next;
-        JA_free(head);
+        curr = curr->next;
+        free(head);
+        head = curr;
     }
 }
 
@@ -128,6 +133,7 @@ simple_matrix_t *init_matrix()
     return m;
 }
 
+
 matrix_t *init_spare_matrix()
 {
     matrix_t *m = (matrix_t *)malloc(sizeof(matrix_t));
@@ -138,8 +144,10 @@ matrix_t *init_spare_matrix()
     m->JA_head = NULL;
     m->rows = 0;
     m->columns = 0;
+    m->elements = 0;
     return m;
 }
+
 
 void clear_matrix(simple_matrix_t *matrix)
 {
@@ -148,6 +156,7 @@ void clear_matrix(simple_matrix_t *matrix)
     matrix->rows = 0;
     matrix->columns = 0;
 }
+
 
 int read_matrix(simple_matrix_t *matrix, FILE *f)
 {
@@ -204,10 +213,14 @@ void print_matrix(simple_matrix_t *matrix)
 void clear_sep_matrix(matrix_t *m)
 {
     free(m->A);
+    m->A = NULL;
     free(m->IA);
+    m->IA = NULL;
     JA_free_all(m->JA_head);
+    m->JA_head = NULL;
     m->rows = 0;
     m->columns = 0;
+    m->elements = 0;
 }
 
 
@@ -257,7 +270,7 @@ int transform(matrix_t *dst, simple_matrix_t *src)
             dst->JA_head = JA_add_end(dst->JA_head, JA_create(elements));
     }
     dst->JA_head = JA_add_end(dst->JA_head, JA_create(elements));
-
+    dst->elements = elements;
     return 0;
 }
 
@@ -376,67 +389,109 @@ int mult(matrix_t *res, matrix_t *m, matrix_t *v)
     }
     for (int i = 0; i < v->rows; i++)
         IP[i] = -1;
-    for (int i = 0; i < JA_get_tail(v->JA_head)->JA; i++)
+    for (int i = 0; i < v->elements; i++)
         IP[v->IA[i]] = i;
 
-    int *IPi = (int *)malloc(v->rows * sizeof(int));
-    int *B = (int *)malloc(m->columns * sizeof(int));
-    int *JB = (int *)malloc(m->columns * sizeof(int));
-    int h, elements;
-    if (B == NULL || JB == NULL || IPi == NULL)
+    JA_t *curr = m->JA_head;
+    int *JA_arr = (int *)calloc(m->columns + 1, sizeof(int));
+    for (int i = 0 ; curr; curr = curr->next, i++)
     {
-        free(B);
-        free(JB);
-        free(IPi);
-        clear_sep_matrix(res);
-        return MEMORY_ERROR;
+        JA_arr[i] = curr->JA;
     }
+    int *temp_res = (int *)calloc(res->rows, sizeof(int));
     // сколько строк
-    int res_elements = 0;
     for (int i = 0; i < m->rows; i++)
     {
-        h = 0;
-        elements = 0;
-        memmove(IPi, IP, v->rows * sizeof(int));
         // Заполняем вектор-строку
-        for (int j = 0; j < JA_get_tail(m->JA_head)->JA; j++)
-        {
-            if (m->IA[j] == i)
-            {
-                B[elements] = m->A[j];
-                int k = 0;
-                JA_t *curr = m->JA_head;
-                for (; curr->JA < j; curr = curr->next, k++)
-                    ;
-                if (curr->JA == j && curr->JA == (*curr->next).JA)
-                    JB[elements] = k + 1;
-                else if (curr->JA == j)
-                    JB[elements] = k;
-                else
-                    JB[elements] = k - 1;
-                elements++;
-            }
-        }
-        // Находим произведение;
-        for (int j = 0; j < elements; j++)
-            if (IPi[JB[j]] != -1)
-                h += B[j] * v->A[JB[j]];
-        
-        // Отправляем h в res
-        if (h != 0)
-        {
-            res->A[res_elements] = h;
-            res->IA[res_elements++] = i;
-            res->JA_head = JA_create(0);
-        }
+        for (int j = JA_arr[i]; j < JA_arr[i + 1]; j++)
+            if (IP[i] != -1)
+                temp_res[m->IA[j]] += m->A[j] * v->A[IP[i]];
+
     }
-    if (res_elements != 0)
-        res->JA_head = JA_add_end(res->JA_head, JA_create(res_elements));
-    else
-        return ZERO_MATRIX_ERROR;
+    free(IP);
+    int elements = 0;
+    for (int i = 0; i < res->rows; i++)
+    {
+        if (temp_res[i] != 0)
+        {
+            res->A[elements] = temp_res[i];
+            res->IA[elements++] = i;
+            res->JA_head =  JA_add_end(res->JA_head, JA_create(0));
+        }
+        if (elements > 0)
+            res->JA_head = JA_add_end(res->JA_head, JA_create(elements));
+        else
+            return ZERO_MATRIX_ERROR;
+    }   
     
     return 0;
 }
+
+
+int efficiency(int rows, int columns)
+{
+	int n = 10;
+	int64_t sum_simple, sum;
+	struct timeval tv_start, tv_stop;
+
+    simple_matrix_t *simple_matrix;
+    simple_matrix = init_matrix();
+    simple_matrix_t *simple_vector;
+    simple_vector = init_matrix();
+    simple_matrix_t *res;
+    res = init_matrix();
+
+    matrix_t *matrix;
+    matrix = init_spare_matrix();
+    matrix_t *vector;
+    vector = init_spare_matrix();
+    matrix_t *result;
+    result = init_spare_matrix();
+
+	sum_simple = 0;
+    sum = 0;
+    printf("-------------------------------------\n");
+    printf("|       |    simple   |    spare    |\n");
+    printf("|procent|-------------|-------------|\n");
+    printf("|       | time |memory| time |memory|\n");
+    printf("-------------------------------------\n");
+    for (int proc = 1; proc < 100; proc += 1)
+    {
+        sum = 0;
+        sum_simple = 0;
+        for (int i = 0; i < n; i++)
+        {
+            make_random_matrix(simple_matrix, proc, rows, columns);
+            make_random_matrix(simple_vector, proc, rows, 1);
+            transform(matrix, simple_matrix);
+            transform(vector, simple_vector);
+
+            gettimeofday(&tv_start, NULL);
+            res = simple_mult(simple_matrix, simple_vector);
+            gettimeofday(&tv_stop, NULL);
+            sum_simple += (tv_stop.tv_sec - tv_start.tv_sec) * 1000000LL + (tv_stop.tv_usec - tv_start.tv_usec);
+
+            gettimeofday(&tv_start, NULL);
+            mult(result, matrix, vector);
+            gettimeofday(&tv_stop, NULL);
+            sum += (tv_stop.tv_sec - tv_start.tv_sec) * 1000000LL + (tv_stop.tv_usec - tv_start.tv_usec);
+
+            clear_matrix(simple_matrix);
+            clear_matrix(simple_vector);
+            clear_matrix(res);
+            clear_sep_matrix(matrix);
+            clear_sep_matrix(vector);
+            clear_sep_matrix(result);
+        }
+        sum /= n;
+        sum_simple /= n;
+        printf("|%-7d|%-6" PRId64 "|%-6ld|%-6" PRId64 "|%-6ld|\n", proc, sum_simple, sizeof(int) * rows * columns,\
+        sum, sizeof(int) * (int)((float)proc / 100.0 * rows * columns) * 2 + sizeof(int) * (rows + 1));
+        printf("-------------------------------------\n");
+    }
+    return 0;
+}
+
 
 int main(int argc, char**argv)
 {
@@ -450,6 +505,7 @@ int main(int argc, char**argv)
     }
 
     int choice;
+    printf("1 - ручной ввод\n2 - ввод с файла\n3 - случайный ввод\n4 - проверка эффективности\n");
     rc = scanf("%d", &choice);
     if (rc != 1)
         return CHOICE_ERROR;
@@ -641,6 +697,16 @@ int main(int argc, char**argv)
                 return rc;
             }
             print_sep_matrix(result);
+            break;
+        }
+        case 4:
+        {
+            int rows, columns;
+            printf("Введите размеры матрицы\n");
+            rc = scanf("%d%d", &rows, &columns);
+            if (rc != 2)
+                return DIM_INPUT_ERROR;
+            efficiency(rows, columns);
             break;
         }
         default:
