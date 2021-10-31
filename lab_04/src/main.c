@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "arrstack.h"
 #include "liststack.h"
+#include "list.h"
 #include "process.h"
 #include "defines.h"
 
@@ -22,6 +23,8 @@ int main(void)
         free_arr_stack(arr_stack);
         return ALLOCATE_ERROR;
     }
+    List *arr_deleted = NULL;
+    List *list_deleted = NULL;
     
     rc = 0;
     while (rc == 0)
@@ -36,6 +39,10 @@ int main(void)
         switch (choice)
         {
         case 0:
+            free_arr_stack(arr_stack);
+            free_list_stack(list_stack);
+            free_list(arr_deleted);
+            free_list(list_deleted);
             return 0;
         case 1:
             rc = add_to_stacks(arr_stack, list_stack);
@@ -43,6 +50,10 @@ int main(void)
                 return rc;
             break;
         case 2:
+            rc = remove_from_stacks(arr_stack, &arr_deleted, list_stack, &list_deleted);
+            if (rc != 0)
+                printf("Стек пуст!\n");
+            rc = 0;
             break;
         case 3:
             break;

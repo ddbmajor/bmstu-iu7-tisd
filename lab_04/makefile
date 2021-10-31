@@ -1,10 +1,10 @@
-CFLAGS := -std=c99 -pedantic -Wall -Werror -Wpedantic -Wextra -Wfloat-equal -Wfloat-conversion -ggdb
+CFLAGS := -std=gnu99 -pedantic -Wall -Werror -Wpedantic -Wextra -Wfloat-equal -Wfloat-conversion -ggdb
 CC := gcc
 OBJ_PATH := out/
 INC_PATH := inc/
 SRC_PATH := src/
 
-app.exe: $(OBJ_PATH)process.o $(OBJ_PATH)liststack.o $(OBJ_PATH)arrstack.o $(OBJ_PATH)main.o
+app.exe: $(OBJ_PATH)process.o $(OBJ_PATH)liststack.o $(OBJ_PATH)arrstack.o $(OBJ_PATH)list.o $(OBJ_PATH)main.o
 	$(CC) $(CFLAGS) -o $@ $^ -I $(INC_PATH)
 
 $(OBJ_PATH)process.o: $(SRC_PATH)process.c
@@ -16,6 +16,10 @@ $(OBJ_PATH)arrstack.o: $(SRC_PATH)arrstack.c
 	$(CC) $(CFLAGS) -o $@ -c $< -I $(INC_PATH)
 
 $(OBJ_PATH)liststack.o: $(SRC_PATH)liststack.c
+	mkdir -p $(OBJ_PATH)
+	$(CC) $(CFLAGS) -o $@ -c $< -I $(INC_PATH)
+
+$(OBJ_PATH)list.o: $(SRC_PATH)list.c
 	mkdir -p $(OBJ_PATH)
 	$(CC) $(CFLAGS) -o $@ -c $< -I $(INC_PATH)
 

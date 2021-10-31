@@ -56,6 +56,10 @@ char *pop_arr_stack(Arr_Stack *s)
 
 void free_arr_stack(Arr_Stack *s)
 {
+    for (int i = 0; i <= s->curr; i++)
+    {
+        free(s->Stack_Start[s->curr]);
+    }
     free(s->Stack_Start);
     free(s);
 }

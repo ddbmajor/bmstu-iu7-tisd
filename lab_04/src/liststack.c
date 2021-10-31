@@ -55,7 +55,7 @@ void free_list_stack(List_Stack *stack)
     while (curr)
     {
         curr = curr->next;
-        free(stack->Stack_Pointer);
+        free_node(stack->Stack_Pointer);
         stack->Stack_Pointer = curr;
     }
 
@@ -66,5 +66,6 @@ void free_list_stack(List_Stack *stack)
 
 void free_node(Node *node)
 {
+    free(node->word);
     free(node);
 }
