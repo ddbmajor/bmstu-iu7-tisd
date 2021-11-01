@@ -17,6 +17,21 @@ List *add_to_list(List *head, List *node)
     return node;
 }
 
+
+void list_apply(List *head, void (*f)(List*, void*), void *arg)
+{
+    for ( ; head; head = head->next)
+        f(head, arg);
+}
+
+
+void node_print(List *pers, void *arg)
+{
+    char *fmt = arg;
+    printf(fmt, pers->ptr, pers->word);
+}
+
+
 void free_list(List *head)
 {
     List *curr = head;

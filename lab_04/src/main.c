@@ -56,8 +56,13 @@ int main(void)
             rc = 0;
             break;
         case 3:
+            rc = print_backwards(arr_stack, &arr_deleted, list_stack, &list_deleted);
+            if (rc != 0)
+                printf("Стек пуст!\n");
+            rc = 0;
             break;
         case 4:
+            rc = print_current(arr_stack, arr_deleted, list_stack, list_deleted);
             break;
         default:
             printf("Неверный пункт меню\n");
