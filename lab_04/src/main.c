@@ -66,6 +66,7 @@ int main(void)
             break;
         default:
             printf("Неверный пункт меню\n");
+            rc = 0;
             break;
         }
     }
