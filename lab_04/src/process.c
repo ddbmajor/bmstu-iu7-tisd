@@ -122,7 +122,9 @@ int print_backwards(Arr_Stack *arr_stack, List **arr_deleted, List_Stack *list_s
     }
     gettimeofday(&tv_stop, NULL);
     sum_simple = (tv_stop.tv_sec - tv_start.tv_sec) * 1000000LL + (tv_stop.tv_usec - tv_start.tv_usec);
+    printf("\n");
     printf("Время (мс): %" PRId64 "\n", sum_simple);
+    printf("Требуемая память: %ld\n\n", sizeof(char *) * arr_stack->curr_size + 4 * sizeof(int));
 
     printf("Вывод из стека списоком:\n");
     gettimeofday(&tv_start, NULL);
@@ -137,7 +139,9 @@ int print_backwards(Arr_Stack *arr_stack, List **arr_deleted, List_Stack *list_s
     }
     gettimeofday(&tv_stop, NULL);
     sum_simple = (tv_stop.tv_sec - tv_start.tv_sec) * 1000000LL + (tv_stop.tv_usec - tv_start.tv_usec);
+    printf("\n");
     printf("Время (мс): %" PRId64 "\n", sum_simple);
+    printf("Требуемая память: %ld\n\n", sizeof(Node) * list_stack->curr_size + 2 * sizeof(int));
     return 0;
 }
 
