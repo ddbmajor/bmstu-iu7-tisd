@@ -6,7 +6,7 @@ List_Stack *create_list_stack()
     if (list_stack == NULL)
         return NULL;
     list_stack->Stack_Pointer = NULL;
-    list_stack->max_size = 1024;
+    list_stack->max_size = 4;
     list_stack->curr_size = 0;
     return list_stack;
 }

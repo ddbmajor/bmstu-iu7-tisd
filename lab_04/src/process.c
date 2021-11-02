@@ -46,19 +46,35 @@ int add_to_stacks(Arr_Stack *arr_stack, List_Stack *list_stack)
     wordcopy = strdup(word);
     int rc;
     rc = push_arr_stack(arr_stack, word);
-    if (rc != 0)
+    if (rc == ALLOCATE_ERROR)
     {
+        free(word);
+        free(wordcopy);
         free_arr_stack(arr_stack);
         return rc;
     }
-    rc = push_list_stack(list_stack, wordcopy);
-    if (rc != 0)
+    else if (rc == STACK_OVERFLOW_ERROR)
     {
+        printf("Стек переполнен!\n");
+        free(word);
+        free(wordcopy);
+        return 0;
+    }
+    rc = push_list_stack(list_stack, wordcopy);
+    if (rc == ALLOCATE_ERROR)
+    {
+        free(word);
+        free(wordcopy);
         free_arr_stack(arr_stack);
         free_list_stack(list_stack);
         return rc;
     }
-
+    else if (rc == STACK_OVERFLOW_ERROR)
+    {
+        free(word);
+        free(wordcopy);
+        return 0;
+    }
     return 0;
 }
 

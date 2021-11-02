@@ -10,7 +10,7 @@ Arr_Stack *create_arr_stack()
     arr_stack->Stack_Start = malloc(arr_stack->curr_size * arr_stack->el_size);
     if (arr_stack->Stack_Start == NULL)
         return NULL;
-    arr_stack->max_size = 1024;
+    arr_stack->max_size = 4;
     arr_stack->curr = -1;
     return arr_stack;
 }
