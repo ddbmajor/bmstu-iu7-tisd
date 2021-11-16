@@ -41,6 +41,8 @@ float min(float a, float b, float c)
 
 void simulate_arr()
 {
+    extern float q1_f_s, q1_f_f, q2_f_s, q2_f_f;
+    extern float q1_w_s, q1_w_f, q2_w_s, q2_w_f;
     float fetch_time1 = 0;
     float fetch_time2 = 0;
 
@@ -61,7 +63,7 @@ void simulate_arr()
     {
         if (time_until_fetch1 <= 0)
         {
-            time_until_fetch1 = random_float(1, 5);
+            time_until_fetch1 = random_float(q1_f_s, q1_f_f);
             task_t *task = create_task();
             int rc = push_arr_queue(queue1, task);
             if (rc == OVERFLOW_ERROR)
@@ -77,7 +79,7 @@ void simulate_arr()
         }
         if (time_until_fetch2 <= 0)
         {
-            time_until_fetch2 = random_float(0, 3);
+            time_until_fetch2 = random_float(q2_f_s, q2_f_f);
             task_t *task = create_task();
             int rc = push_arr_queue(queue2, task);
             if (rc == OVERFLOW_ERROR)
@@ -103,7 +105,7 @@ void simulate_arr()
                     task_t *task;
                     task = pop_arr_queue(queue1);
 
-                    time_until_work = random_float(0, 4);
+                    time_until_work = random_float(q1_w_s, q1_w_f);
 
                     work_time += time_until_work;
                     log1.calls += 1;
@@ -117,7 +119,7 @@ void simulate_arr()
                     task_t *task;
                     task = pop_arr_queue(queue2);
 
-                    time_until_work = random_float(0, 1);
+                    time_until_work = random_float(q2_w_s, q2_w_f);
 
                     work_time += time_until_work;
                     log2.calls += 1;
@@ -134,17 +136,21 @@ void simulate_arr()
                     // printf("%d\n", log.calls);
                     printf("Неудачные заявки 1: %d\n", log1.tasks_failed);
                     printf("Текущая длина очереди 1: %d\n", queue1->amount);
-                    printf("Средняя длина очереди 1: %d\n", log1.overall_len / log1.tasks_out);
-                    printf("Среднее время ожидания в очереди 1: %f\n", (log1.overall_len / log1.tasks_out) * (fetch_time1 / log1.tasks_in));
+                    printf("Средняя длина очереди 1: %d\n", log1.tasks_out != 0 ? log1.overall_len / log1.tasks_out : log1.tasks_in);
+                    printf("Среднее время ожидания в очереди 1: %f\n", log1.tasks_out != 0 ? \
+                                        (log1.overall_len / log1.tasks_out) * (fetch_time1 / log1.tasks_in) \
+                                        : log1.tasks_in * (fetch_time1 / log1.tasks_in));
                     printf("\n");
 
                     printf("Вышедшие заявки 2: %d\n", log2.tasks_out);
                     printf("Вошедшие завяки 2: %d\n", log2.tasks_in);
                     // printf("%d\n", log.calls);
                     printf("Неудачные заявки 2: %d\n", log2.tasks_failed);
-                    printf("Текущая длина очереди 1: %d\n", queue2->amount);
-                    printf("Средняя длина очереди 2: %d\n", log2.overall_len / log2.tasks_out);
-                    printf("Среднее время ожидания в очереди 2: %f\n", (log2.overall_len / log2.tasks_out) * (fetch_time2 / log2.tasks_in));
+                    printf("Текущая длина очереди 2: %d\n", queue2->amount);
+                    printf("Средняя длина очереди 2: %d\n", log2.tasks_out != 0 ? log2.overall_len / log2.tasks_out : log2.tasks_in);
+                    printf("Среднее время ожидания в очереди 2: %f\n", log2.tasks_out != 0 ? \
+                                        (log2.overall_len / log2.tasks_out) * (fetch_time2 / log2.tasks_in) \
+                                        : log2.tasks_in * (fetch_time2 / log2.tasks_in));
                     printf("\n");      
                 }
             }
@@ -171,6 +177,8 @@ void simulate_arr()
 
 void simulate_list()
 {
+    extern float q1_f_s, q1_f_f, q2_f_s, q2_f_f;
+    extern float q1_w_s, q1_w_f, q2_w_s, q2_w_f;
     float fetch_time1 = 0;
     float fetch_time2 = 0;
 
@@ -191,7 +199,7 @@ void simulate_list()
     {
         if (time_until_fetch1 <= 0)
         {
-            time_until_fetch1 = random_float(1, 5);
+            time_until_fetch1 = random_float(q1_f_s, q1_f_f);
             task_t *task = create_task();
             int rc = push_list_queue(queue1, task);
             if (rc == OVERFLOW_ERROR)
@@ -207,7 +215,7 @@ void simulate_list()
         }
         if (time_until_fetch2 <= 0)
         {
-            time_until_fetch2 = random_float(0, 3);
+            time_until_fetch2 = random_float(q2_f_s, q2_f_f);
             task_t *task = create_task();
             int rc = push_list_queue(queue2, task);
             if (rc == OVERFLOW_ERROR)
@@ -233,7 +241,7 @@ void simulate_list()
                     task_t *task;
                     task = pop_list_queue(queue1);
 
-                    time_until_work = random_float(0, 4);
+                    time_until_work = random_float(q1_w_s, q1_w_f);
 
                     work_time += time_until_work;
                     log1.calls += 1;
@@ -247,7 +255,7 @@ void simulate_list()
                     task_t *task;
                     task = pop_list_queue(queue2);
 
-                    time_until_work = random_float(0, 1);
+                    time_until_work = random_float(q2_w_s, q2_w_f);
 
                     work_time += time_until_work;
                     log2.calls += 1;
@@ -264,17 +272,21 @@ void simulate_list()
                     // printf("%d\n", log.calls);
                     printf("Неудачные заявки 1: %d\n", log1.tasks_failed);
                     printf("Текущая длина очереди 1: %d\n", queue1->amount);
-                    printf("Средняя длина очереди 1: %d\n", log1.overall_len / log1.tasks_out);
-                    printf("Среднее время ожидания в очереди 1: %f\n", (log1.overall_len / log1.tasks_out) * (fetch_time1 / log1.tasks_in));
+                    printf("Средняя длина очереди 1: %d\n", log1.tasks_out != 0 ? log1.overall_len / log1.tasks_out : log1.tasks_in);
+                    printf("Среднее время ожидания в очереди 1: %f\n", log1.tasks_out != 0 ? \
+                                        (log1.overall_len / log1.tasks_out) * (fetch_time1 / log1.tasks_in) \
+                                        : log1.tasks_in * (fetch_time1 / log1.tasks_in));
                     printf("\n");
 
                     printf("Вышедшие заявки 2: %d\n", log2.tasks_out);
                     printf("Вошедшие завяки 2: %d\n", log2.tasks_in);
                     // printf("%d\n", log.calls);
                     printf("Неудачные заявки 2: %d\n", log2.tasks_failed);
-                    printf("Текущая длина очереди 1: %d\n", queue2->amount);
-                    printf("Средняя длина очереди 2: %d\n", log2.overall_len / log2.tasks_out);
-                    printf("Среднее время ожидания в очереди 2: %f\n", (log2.overall_len / log2.tasks_out) * (fetch_time2 / log2.tasks_in));
+                    printf("Текущая длина очереди 2: %d\n", queue2->amount);
+                    printf("Средняя длина очереди 2: %d\n", log2.tasks_out != 0 ? log2.overall_len / log2.tasks_out : log2.tasks_in);
+                    printf("Среднее время ожидания в очереди 2: %f\n", log2.tasks_out != 0 ? \
+                                        (log2.overall_len / log2.tasks_out) * (fetch_time2 / log2.tasks_in) \
+                                        : log2.tasks_in * (fetch_time2 / log2.tasks_in));
                     printf("\n");      
                 }
             }
