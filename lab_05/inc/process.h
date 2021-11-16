@@ -19,6 +19,8 @@ typedef struct
 } sim_log_t;
 
 float random_float(float min, float max);
+float max(float a, float b, float c);
+float min(float a, float b, float c);
 void simulate_arr();
 void simulate_list();
 void make_and_del_arr();

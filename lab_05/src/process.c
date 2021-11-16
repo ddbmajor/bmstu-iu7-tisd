@@ -97,7 +97,7 @@ void simulate_arr()
         if (time_until_work <= 0)
         {
             if (queue1->amount == 0 && queue2->amount == 0)
-                hold_time += fmin(time_until_fetch1, time_until_fetch2);
+                hold_time += fmax(time_until_fetch1, time_until_fetch2);
             else
             {
                 if (queue1->amount != 0)
@@ -170,6 +170,11 @@ void simulate_arr()
     printf("Время работы: %f\n", work_time);
     printf("Общее время моделирования : %f\n", hold_time + work_time);
 
+    float expected_time = (q1_f_f + q1_f_s) > (q1_w_f + q1_w_s) ? ((float)(q1_f_f + q1_f_s) / 2.0) * 1000 : ((float)(q1_w_f + q1_w_s) / 2.0) * 1000;
+
+    printf("Ожидаемое теоритическое время: %f\n", expected_time);
+    printf("Погрешность: %3.2f%%\n", fabs((hold_time + work_time - expected_time) / expected_time * 100));
+
     delete_arr_queue(queue1);
     delete_arr_queue(queue2);
 }
@@ -233,7 +238,7 @@ void simulate_list()
         if (time_until_work <= 0)
         {
             if (queue1->amount == 0 && queue2->amount == 0)
-                hold_time += fmin(time_until_fetch1, time_until_fetch2);
+                hold_time += fmax(time_until_fetch1, time_until_fetch2);
             else
             {
                 if (queue1->amount != 0)
@@ -305,6 +310,11 @@ void simulate_list()
     printf("Время ожидания: %f\n", hold_time);
     printf("Время работы: %f\n", work_time);
     printf("Общее время моделирования : %f\n", hold_time + work_time);
+
+    float expected_time = (q1_f_f + q1_f_s) > (q1_w_f + q1_w_s) ? ((float)(q1_f_f + q1_f_s) / 2.0) * 1000 : ((float)(q1_w_f + q1_w_s) / 2.0) * 1000;
+
+    printf("Ожидаемое теоритическое время: %f\n", expected_time);
+    printf("Погрешность: %3.2f%%\n", fabs((hold_time + work_time - expected_time) / expected_time * 100));
 
     delete_list_queue(queue1);
     delete_list_queue(queue2);
@@ -409,7 +419,7 @@ void hand_mode()
                 {
                     if (rc == OVERFLOW_ERROR)
                     {
-                        printf("Список переполнен!\n");
+                        printf("Очередь переполнена!\n");
                     }
                     else if (rc == ALLOC_ERROR)
                     {
@@ -431,7 +441,7 @@ void hand_mode()
                 {
                     if (rc == OVERFLOW_ERROR)
                     {
-                        printf("Список переполнен!\n");
+                        printf("Очередь переполнена!\n");
                     }
                     else if (rc == ALLOC_ERROR)
                     {
@@ -450,7 +460,7 @@ void hand_mode()
                 task_t *task = pop_arr_queue(arr_queue);
                 if (task == NULL)
                 {
-                    printf("Список пуст!\n");
+                    printf("Очередь пуста!\n");
                 }
                 else
                 {
@@ -464,7 +474,7 @@ void hand_mode()
                 task_t *task = pop_list_queue(list_queue);
                 if (task == NULL)
                 {
-                    printf("Список пуст!\n");
+                    printf("Очередь пуста!\n");
                 }
                 else
                 {
