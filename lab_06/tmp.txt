@@ -1,16 +1,4 @@
 digraph BST {
     node [fontname="Arial"];
-    mama -> baba;
-    baba -> apaa;
-    null4 [shape=point];
-    apaa -> null4;
-    null5 [shape=point];
-    apaa -> null5;
-    null6 [shape=point];
-    baba -> null6;
-    mama -> papa;
-    null7 [shape=point];
-    papa -> null7;
-    null8 [shape=point];
-    papa -> null8;
+    ;
 }

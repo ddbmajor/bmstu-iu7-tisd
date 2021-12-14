@@ -66,7 +66,8 @@ tree_node_t *lookup_tree(tree_node_t *tree, char *word, int *n)
         return NULL;
 
     cmp = strcmp(word, tree->word);
-    (*n)++;
+    if (n)
+        (*n)++;
     if (cmp == 0)
         return tree;
     else if (cmp < 0)
