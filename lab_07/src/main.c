@@ -40,6 +40,10 @@ int main(int argc, char **argv)
             {
                 printf("Нет такого пункта, попробуйте еще раз!\n");
             }
+            else
+            {
+                printf("Некорректный ввод\n");
+            }
         }
         ch = tmpChoice;
         switch (ch)
@@ -48,10 +52,12 @@ int main(int argc, char **argv)
             add_new_vertex(gr);
             break;
         case add_path:
-            add_new_path(gr);
+            if (add_new_path(gr) != 0)
+                printf("Некорректный ввод\n");
             break;
         case delete_path_:
-            delete_path(gr);
+            if (delete_path(gr) != 0)
+                printf("Некорректный ввод\n");
             break;
         case print_graph:
             graphMatrixMakeDot(gr, "graph.txt", NULL);
